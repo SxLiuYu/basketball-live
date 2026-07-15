@@ -9,7 +9,8 @@ if (!fs.existsSync(dir)) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-const db: Database = new Database(DB_PATH);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
