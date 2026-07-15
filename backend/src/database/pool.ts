@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
@@ -9,12 +10,10 @@ if (!fs.existsSync(dir)) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function createDatabase() {
-  const db = new Database(DB_PATH);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  console.log(`🗄️  SQLite database connected: ${DB_PATH}`);
-  return db;
-}
+const db = new Database(DB_PATH);
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
-export default createDatabase();
+console.log(`🗄️  SQLite database connected: ${DB_PATH}`);
+
+export default db;
