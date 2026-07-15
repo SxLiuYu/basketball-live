@@ -9,11 +9,12 @@ if (!fs.existsSync(dir)) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db: any = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+function createDatabase() {
+  const db = new Database(DB_PATH);
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+  console.log(`🗄️  SQLite database connected: ${DB_PATH}`);
+  return db;
+}
 
-console.log(`🗄️  SQLite database connected: ${DB_PATH}`);
-
-export default db;
+export default createDatabase();
