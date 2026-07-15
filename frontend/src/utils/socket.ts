@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = process.env.NODE_ENV === 'production'
+const SOCKET_URL = (import.meta.env.NODE_ENV === 'production' || import.meta.env.PROD)
   ? window.location.origin
   : 'http://localhost:3001';
 
