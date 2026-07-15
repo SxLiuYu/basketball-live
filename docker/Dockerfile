@@ -3,7 +3,7 @@ FROM node:20-alpine AS backend-builder
 
 # Install build dependencies for better-sqlite3
 RUN apk add --no-cache python3 make g++
-RUN ln -s /usr/bin/python3 /usr/bin/python
+RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 WORKDIR /app
 COPY backend/package.json ./
