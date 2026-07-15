@@ -54,6 +54,10 @@ interface MatchStats {
   awaySteals: number;
   homeBlocks: number;
   awayBlocks: number;
+  homeTurnovers: number;
+  awayTurnovers: number;
+  homeFouls: number;
+  awayFouls: number;
 }
 
 export default function ControlPanel() {
@@ -71,6 +75,8 @@ export default function ControlPanel() {
     homeAssists: 0, awayAssists: 0,
     homeSteals: 0, awaySteals: 0,
     homeBlocks: 0, awayBlocks: 0,
+    homeTurnovers: 0, awayTurnovers: 0,
+    homeFouls: 0, awayFouls: 0,
   });
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null);
   const [selectDrawerOpen, setSelectDrawerOpen] = useState(false);
@@ -90,6 +96,10 @@ export default function ControlPanel() {
           awaySteals: data.away_steals || 0,
           homeBlocks: data.home_blocks || 0,
           awayBlocks: data.away_blocks || 0,
+          homeTurnovers: data.home_turnovers || 0,
+          awayTurnovers: data.away_turnovers || 0,
+          homeFouls: data.home_fouls || 0,
+          awayFouls: data.away_fouls || 0,
         });
       }
       if (data.lastEvents) {
@@ -171,10 +181,13 @@ export default function ControlPanel() {
   const getEventTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       score: '得分',
+      'free-throw': '罚球',
       assist: '助攻',
       rebound: '篮板',
       steal: '抢断',
       block: '盖帽',
+      turnover: '失误',
+      foul: '犯规',
     };
     return labels[type] || type;
   };
@@ -182,10 +195,13 @@ export default function ControlPanel() {
   const getEventColor = (type: string) => {
     const colors: Record<string, string> = {
       score: 'orange',
+      'free-throw': 'gold',
       assist: 'blue',
       rebound: 'green',
       steal: 'purple',
       block: 'red',
+      turnover: 'gray',
+      foul: 'pink',
     };
     return colors[type] || 'default';
   };
@@ -334,6 +350,18 @@ export default function ControlPanel() {
             </Space>
           </Card>
 
+          {/* Free Throw */}
+          <Card size="small" title="🎯 罚球">
+            <Space>
+              <Button type="primary" size="large" onClick={() => handleAction('free-throw', { points: 1 })}>
+                命中 +1
+              </Button>
+              <Button type="default" size="large" onClick={() => handleAction('free-throw', { points: 0 })}>
+                不中
+              </Button>
+            </Space>
+          </Card>
+
           {/* Assist */}
           <Card size="small" title="🎯 助攻">
             <Button type="default" size="large" block onClick={() => handleAction('assist')}>
@@ -364,6 +392,20 @@ export default function ControlPanel() {
           <Card size="small" title="🚫 盖帽">
             <Button type="default" block onClick={() => handleAction('block')}>
               记一次盖帽
+            </Button>
+          </Card>
+
+          {/* Turnover */}
+          <Card size="small" title="⚠️ 失误">
+            <Button type="default" block onClick={() => handleAction('turnover')}>
+              记一次失误
+            </Button>
+          </Card>
+
+          {/* Foul */}
+          <Card size="small" title="👋 犯规">
+            <Button type="default" block onClick={() => handleAction('foul')}>
+              记一次犯规
             </Button>
           </Card>
         </Space>

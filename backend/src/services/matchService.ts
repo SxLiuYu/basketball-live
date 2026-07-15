@@ -48,7 +48,7 @@ export interface MatchPlayer {
   team_name?: string;
 }
 
-export type EventType = 'score' | 'assist' | 'rebound' | 'steal' | 'block';
+export type EventType = 'score' | 'assist' | 'rebound' | 'steal' | 'block' | 'free-throw' | 'turnover' | 'foul';
 
 export interface PlayEvent {
   id: number;
@@ -263,6 +263,8 @@ export function getMatchStats(matchId: number) {
       homeAssists: 0, awayAssists: 0,
       homeSteals: 0, awaySteals: 0,
       homeBlocks: 0, awayBlocks: 0,
+      homeTurnovers: 0, awayTurnovers: 0,
+      homeFouls: 0, awayFouls: 0,
     };
   }
 
@@ -271,8 +273,8 @@ export function getMatchStats(matchId: number) {
 
   const row = db.prepare(`
     SELECT 
-      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'score' THEN pe.points ELSE 0 END), 0) as home_score,
-      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'score' THEN pe.points ELSE 0 END), 0) as away_score,
+      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type IN ('score', 'free-throw') THEN pe.points ELSE 0 END), 0) as home_score,
+      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type IN ('score', 'free-throw') THEN pe.points ELSE 0 END), 0) as away_score,
       COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'rebound' THEN 1 ELSE 0 END), 0) as home_rebounds,
       COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'rebound' THEN 1 ELSE 0 END), 0) as away_rebounds,
       COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'assist' THEN 1 ELSE 0 END), 0) as home_assists,
@@ -280,11 +282,17 @@ export function getMatchStats(matchId: number) {
       COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'steal' THEN 1 ELSE 0 END), 0) as home_steals,
       COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'steal' THEN 1 ELSE 0 END), 0) as away_steals,
       COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'block' THEN 1 ELSE 0 END), 0) as home_blocks,
-      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'block' THEN 1 ELSE 0 END), 0) as away_blocks
+      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'block' THEN 1 ELSE 0 END), 0) as away_blocks,
+      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'turnover' THEN 1 ELSE 0 END), 0) as home_turnovers,
+      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'turnover' THEN 1 ELSE 0 END), 0) as away_turnovers,
+      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'foul' THEN 1 ELSE 0 END), 0) as home_fouls,
+      COALESCE(SUM(CASE WHEN p.team_id = ? AND pe.event_type = 'foul' THEN 1 ELSE 0 END), 0) as away_fouls
     FROM play_events pe
     JOIN players p ON pe.player_id = p.id
     WHERE pe.match_id = ? AND pe.is_cancelled = 0
   `).get(
+    homeTeamId, awayTeamId,
+    homeTeamId, awayTeamId,
     homeTeamId, awayTeamId,
     homeTeamId, awayTeamId,
     homeTeamId, awayTeamId,
@@ -304,6 +312,10 @@ export function getMatchStats(matchId: number) {
     awaySteals: row.away_steals || 0,
     homeBlocks: row.home_blocks || 0,
     awayBlocks: row.away_blocks || 0,
+    homeTurnovers: row.home_turnovers || 0,
+    awayTurnovers: row.away_turnovers || 0,
+    homeFouls: row.home_fouls || 0,
+    awayFouls: row.away_fouls || 0,
   };
 }
 
@@ -317,11 +329,13 @@ export function getPlayerStats(matchId: number) {
       p.name as player_name,
       t.name as team_name,
       CASE WHEN t.id = ? THEN 1 ELSE 0 END as is_home,
-      COALESCE(SUM(CASE WHEN pe.event_type = 'score' THEN pe.points ELSE 0 END), 0) as points,
+      COALESCE(SUM(CASE WHEN pe.event_type IN ('score', 'free-throw') THEN pe.points ELSE 0 END), 0) as points,
       COALESCE(SUM(CASE WHEN pe.event_type = 'rebound' THEN 1 ELSE 0 END), 0) as rebounds,
       COALESCE(SUM(CASE WHEN pe.event_type = 'assist' THEN 1 ELSE 0 END), 0) as assists,
       COALESCE(SUM(CASE WHEN pe.event_type = 'steal' THEN 1 ELSE 0 END), 0) as steals,
-      COALESCE(SUM(CASE WHEN pe.event_type = 'block' THEN 1 ELSE 0 END), 0) as blocks
+      COALESCE(SUM(CASE WHEN pe.event_type = 'block' THEN 1 ELSE 0 END), 0) as blocks,
+      COALESCE(SUM(CASE WHEN pe.event_type = 'turnover' THEN 1 ELSE 0 END), 0) as turnovers,
+      COALESCE(SUM(CASE WHEN pe.event_type = 'foul' THEN 1 ELSE 0 END), 0) as fouls
     FROM play_events pe
     JOIN players p ON pe.player_id = p.id
     JOIN teams t ON p.team_id = t.id
